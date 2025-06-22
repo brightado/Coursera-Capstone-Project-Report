@@ -1,0 +1,176 @@
+---
+title: "Coursera Capstone Project Report"
+author: "Bright"
+date: "`3/21/2025`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Cyclistic Bike Share Usage Analysis
+
+## Business Task Statement
+
+To analyze how annual members and casual riders use Cyclistic bikes differently to identify key usage patterns and provide actionable recommendations to support strategic decision-making. 
+
+## Data Sources
+
+The data used for this analysis was provided by Motivate International Inc. under the data license agreement available at: <https://www.divvybikes.com/data-license-agreement>. This is publicly available data intended to explore customer behaviors and usage trends for Cyclistic bikes.
+
+## Data Cleaning and Preparation Process 
+
+To ensure the dataset was ready for accurate and meaningful analysis, the following steps were taken: 
+
+#### Data Import and Consolidation 
+  + Monthly datasets (12 Excel workbooks) were consolidated into a single dataset.
+  + All files were verified for consistent column headers and data structure. 
+  
+#### Standardization and Cleaning 
+  + Column headers were standardized. 
+  + Data types were verified and corrected where necessary (e.g., date fields and numeric values).
+  
+#### New Calculated Columns 
+  + Average Ride Length: Created to summarize the duration of each ride. 
+  + Day of the Week: Extracted from ride start times using Excel's TEXT function for weekday analysis.
+  
+#### Pivot Charts and Data Exploration 
+  + Monthly Trends: Analyzed average ride lengths by month and rider type. 
+  + Weekday Patterns: Visualized ride frequency and duration by day of the week. 
+  
+#### Descriptive Statistics 
+  + Computed minimum, maximum, and mode of ride lengths. 
+  + Identified the mode day (most frequent ride day) for both rider types.
+  
+#### Data Consistency Checks 
+  + Verified uniqueness of ride IDs and consistency of key fields like rideable type and timestamps.
+
+#### Final Dataset Preparation 
+  + Cleaned data with added insights was used for advanced analysis, 
+forecasting, and pattern recognition.
+
+## Summary of Analysis 
+
+The cleaned data was imported into BigQuery for further analysis using SQL. Key findings include: 
+  + Casual riders consistently exhibit longer average ride lengths than members. 
+  + Casual ridership increases significantly in warmer months (March–July). 
+  + Electrical bikes are the preferred rideable type for casual riders. 
+  + Casual rides are more concentrated on weekends, while membership is evenly distributed throughout the week.
+  
+## Supporting Visualizations and Key Findings
+
+The pivoted datasets were now imported into RStudio for further analysis and visualisation using R programming.
+
+## Setting up my environment
+Note: I set up my environment by installing and loading the 'tidyverse' and 'ggplot2' packages:
+
+```{r echo=TRUE}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r load data, echo=TRUE}
+average_rides <- readRDS("average_rides.rds")
+```
+
+```{r view dataframe}
+view(average_rides)
+```
+
+## Average Ride Length by User Type
+
+```{r viz Average ride length by user type, echo=TRUE}
+ggplot(average_rides, aes(x = month, y = duration_minutes, fill = user_type)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  labs(title = "Average Ride Duration Per Month",
+           x = "Month",
+           y = "Duration (minutes)",
+           fill = "User Type") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Based on the visualization;
+
+  + Casual riders have a higher average ride length compared to members. 
+  + Casual usage spikes seasonally, peaking during warmer months.
+
+## Preferred Rideable Type
+
+```{r load second data}
+preferred_rides <- read.csv("Preferred Rideable Type.csv")
+```
+
+```{r}
+preferred_rides <- rename(preferred_rides, 'total_rides' = Sum.of.total_rides)
+```
+
+
+```{r view second data}
+view(preferred_rides)
+```
+
+```{r viz preferred_rides}
+ggplot(preferred_rides, aes(x = ride_month, y = total_rides, fill = total_rides)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Preferred Rideable Type",
+           x = "Month",
+           y = "Total Rides",
+           fill = "Total Rides") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5),  # Center the title
+    axis.text.x = element_text(angle = 0, hjust = 0.5)) # Center x-axis labels under bars
+```
+
+Based on the visualization;
+
+  + Casual riders show a strong preference for electric bikes. 
+  
+## Number of Rides Per Day of the Week
+
+```{r load third data}
+rides_per_day <- read.csv("Number of Rides Per Day of the Week.csv")
+```
+
+```{r view third data}
+view(rides_per_day)
+```
+
+```{r load scales to show number of rides}
+library(scales)
+```
+
+```{r}
+ggplot() +
+  geom_bar(aes(x = rides_per_day$week - 0.2, y = rides_per_day$casual, fill = "Casual"),
+           stat = "identity", width = 0.4) +
+  geom_bar(aes(x = rides_per_day$week + 0.2, y = rides_per_day$member, fill = "Member"),
+           stat = "identity", width = 0.4) +
+  scale_fill_manual(values = c("Casual" = "skyblue", "Member" = "orange")) +
+  scale_x_continuous(breaks = rides_per_day$week) +
+  scale_y_continuous(labels = comma) +
+  labs(title = "Daily Rides by User Type", x = "Day of the Week(Sunday - Saturday)", y = "Number of Rides", fill = "User Type") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Based on the visualization;
+
+  + Weekends see more casual ridership, while members show consistent weekday usage.
+
+## Top Three Recommendations
+
+#### Seasonal Promotions for Membership Conversion 
+  + Offer targeted promotions (e.g., summer discounts, free trial months) to convert casual riders during peak seasons. 
+
+#### Customized Membership Options 
+  + Introduce flexible memberships (e.g., weekend-only, premium routes) tailored to casual rider preferences.
+  
+#### Incentives and Loyalty Programs 
+  + Implement a points-based loyalty system for casual riders to earn rewards and discounts toward membership. 
+  + Provide winter incentives like gear discounts to maintain engagement during low-use seasons.
+  
+  
+This was a great learning journey for me.
+All thanks to [Coursera](https://www.coursera.org/courseraplus?utm_medium=sem&utm_source=gg&utm_campaign=b2c_emea_x_coursera_ftcof_courseraplus_cx_dr_bau_gg_sem_bd-ex_s4_en_m_hyb_24-10_x&campaignid=21836581623&adgroupid=351685085710&device=c&keyword=coursera&matchtype=e&network=g&devicemodel=&creativeid=1449957450675&assetgroupid=&targetid=aud-2264666224030:kwd-36262515261&extensionid=&placement=&gad_source=1&gad_campaignid=21836581623&gbraid=0AAAAADdKX6bKWvqAjFQ2hedw3UI8Wy4_5&gclid=CjwKCAjwpMTCBhA-EiwA_-MsmX-Rl6xuKqfmyUmdeN81HA0o3uA_3JLYgru00cz0oRDS0PPW5ronXhoCOTQQAvD_BwE)
+You can also learn new things. 
